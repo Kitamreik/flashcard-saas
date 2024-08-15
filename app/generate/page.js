@@ -1,4 +1,4 @@
-//This sets up the basic structure of our generate page with a text input area and a submit button. The `useState` hooks manage the state for the input text and generated flashcards.
+//This sets up the basic structure of our generate page with a text input area and a submit button. The `useState` hooks manage the state for the input text and generated flashcards. 
 'use client'
 
 import { useState } from 'react'
@@ -13,6 +13,49 @@ import {
 export default function Generate() {
   const [text, setText] = useState('')
   const [flashcards, setFlashcards] = useState([])
+
+  //First, let’s add a state for the flashcard set name and the dialog open state
+  const [setName, setSetName] = useState('')
+  const [dialogOpen, setDialogOpen] = useState(false)
+
+  //Next, let’s add functions to handle opening and closing the dialog
+  const handleOpenDialog = () => setDialogOpen(true)
+  const handleCloseDialog = () => setDialogOpen(false)
+
+  //Now, let’s implement the function to save flashcards to Firebase
+  const saveFlashcards = async () => {
+    if (!setName.trim()) {
+      alert('Please enter a name for your flashcard set.')
+      return
+    }
+  
+    try {
+      const userDocRef = doc(collection(db, 'users'), user.id)
+      const userDocSnap = await getDoc(userDocRef)
+  
+      const batch = writeBatch(db)
+  
+      if (userDocSnap.exists()) {
+        const userData = userDocSnap.data()
+        const updatedSets = [...(userData.flashcardSets || []), { name: setName }]
+        batch.update(userDocRef, { flashcardSets: updatedSets })
+      } else {
+        batch.set(userDocRef, { flashcardSets: [{ name: setName }] })
+      }
+  
+      const setDocRef = doc(collection(userDocRef, 'flashcardSets'), setName)
+      batch.set(setDocRef, { flashcards })
+  
+      await batch.commit()
+  
+      alert('Flashcards saved successfully!')
+      handleCloseDialog()
+      setSetName('')
+    } catch (error) {
+      console.error('Error saving flashcards:', error)
+      alert('An error occurred while saving flashcards. Please try again.')
+    }
+  }
 
   //This function does the following:
   /*
@@ -94,6 +137,38 @@ export default function Generate() {
             </Grid>
         </Box>
         )}
+        {/* save flashcards button below generated flashcards */}
+        {flashcards.length > 0 && (
+        <Box sx={{ mt: 4, display: 'flex', justifyContent: 'center' }}>
+            <Button variant="contained" color="primary" onClick={handleOpenDialog}>
+            Save Flashcards
+            </Button>
+        </Box>
+        )}
+        {/* Finally, let’s add the dialog component for naming and saving the flashcard set */}
+        <Dialog open={dialogOpen} onClose={handleCloseDialog}>
+        <DialogTitle>Save Flashcard Set</DialogTitle>
+        <DialogContent>
+            <DialogContentText>
+            Please enter a name for your flashcard set.
+            </DialogContentText>
+            <TextField
+            autoFocus
+            margin="dense"
+            label="Set Name"
+            type="text"
+            fullWidth
+            value={setName}
+            onChange={(e) => setSetName(e.target.value)}
+            />
+        </DialogContent>
+        <DialogActions>
+            <Button onClick={handleCloseDialog}>Cancel</Button>
+            <Button onClick={saveFlashcards} color="primary">
+            Save
+            </Button>
+        </DialogActions>
+        </Dialog>
     </Container>
   )
 }
