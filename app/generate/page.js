@@ -2,25 +2,50 @@
 'use client'
 
 import { useState } from 'react'
+
+//Pratik Code
+import { useUser } from "@clerk/nextjs";
 import {
+  Typography,
   Container,
+  Box,
+  Paper,
+  Grid,
+  Card,
   TextField,
   Button,
-  Typography,
-  Box,
+  CardActionArea,
+  CardContent,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from '@mui/material'
 
+
+import { collection, doc, getDoc, writeBatch } from "firebase/firestore";
+import { useRouter } from "next/navigation";
+import { db } from "@/firebase";
+
+//end
+
 export default function Generate() {
-  const [text, setText] = useState('')
-  const [flashcards, setFlashcards] = useState([])
+  const { isLoaded, isSignedIn, user } = useUser();
+  const [text, setText] = useState('');
+  const [flashcards, setFlashcards] = useState([]);
+  const [flipped, setFlipped] = useState({});
+
 
   //First, let’s add a state for the flashcard set name and the dialog open state
-  const [setName, setSetName] = useState('')
-  const [dialogOpen, setDialogOpen] = useState(false)
+  const [setName, setSetName] = useState('');
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   //Next, let’s add functions to handle opening and closing the dialog
-  const handleOpenDialog = () => setDialogOpen(true)
-  const handleCloseDialog = () => setDialogOpen(false)
+  const handleOpenDialog = () => setDialogOpen(true);
+  const handleCloseDialog = () => setDialogOpen(false);
+
+  const router = useRouter();
 
   //Now, let’s implement the function to save flashcards to Firebase
   const saveFlashcards = async () => {
@@ -28,8 +53,7 @@ export default function Generate() {
       alert('Please enter a name for your flashcard set.')
       return
     }
-  
-    try {
+  //refactor out try catch
       const userDocRef = doc(collection(db, 'users'), user.id)
       const userDocSnap = await getDoc(userDocRef)
   
@@ -42,19 +66,41 @@ export default function Generate() {
       } else {
         batch.set(userDocRef, { flashcardSets: [{ name: setName }] })
       }
+
+      //Pratik Code
+      /*
+      if (docSnap.exists()) {
+            const collections = docSnap.data().flashcards || [];
+            if (collections.find((f) => f.name === name)) {
+                alert("Flashcard collection with the same name already exists.");
+                return;
+            } else {
+                collections.push({ name });
+                batch.set(userDocRef, { flashcards: collections }, { merge: true });
+            }
+        } else {
+            batch.set(userDocRef, { flashcards: [{ name }] });
+        }
+      */
   
       const setDocRef = doc(collection(userDocRef, 'flashcardSets'), setName)
-      batch.set(setDocRef, { flashcards })
+      //Pratik Code
+      flashcards.forEach((flashcard) => {
+        const cardDocRef = doc(setDocRef);
+        batch.set(cardDocRef, flashcard);
+    });
+
+    console.log(batch.set(setDocRef, { flashcards }) )
+      batch.set(setDocRef, { flashcards }) //?
   
       await batch.commit()
   
       alert('Flashcards saved successfully!')
       handleCloseDialog()
       setSetName('')
-    } catch (error) {
-      console.error('Error saving flashcards:', error)
-      alert('An error occurred while saving flashcards. Please try again.')
-    }
+
+   //use the router to push the flashcards
+   router.push("/flashcards");
   }
 
   //This function does the following:
@@ -69,23 +115,42 @@ export default function Generate() {
       alert('Please enter some text to generate flashcards.')
       return
     }
-  
-    try {
+    //refactor out try/catch for then/catch
       const response = await fetch('/api/generate', {
         method: 'POST',
-        body: text,
+        //advanced
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ content: text }),
+        
+        //body: text, //basic
       })
+      //advanced 
+      .then((res) => res.json())
+      .then((data) => setFlashcards(data))
+      .catch(console.error('Error generating flashcards:', error))
   
       if (!response.ok) {
         throw new Error('Failed to generate flashcards')
       }
-  
-      const data = await response.json()
-      setFlashcards(data)
-    } catch (error) {
-      console.error('Error generating flashcards:', error)
+      //basic
+      //const data = await response.json()
+      //setFlashcards(data)
+
       alert('An error occurred while generating flashcards. Please try again.')
     }
+
+  //handle clicks
+  const handleCardClick = (id) => {
+    setFlipped((prev) => ({
+        ...prev,
+        [id]: !prev[id],
+    }));
+  };
+
+  if (!isLoaded || !isSignedIn) {
+    return <></>;
   }
 
   return (
