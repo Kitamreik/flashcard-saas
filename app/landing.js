@@ -2,7 +2,7 @@
 "use client";
 
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
-import { AppBar, Toolbar, Typography, Button, Box, Grid, Card, CardContent, CardMedia, Tab, Tabs } from "@mui/material";
+import { Toolbar, Typography, Button, Box, Grid, Card, CardContent, CardMedia, Tab, Tabs } from "@mui/material";
 import { useState } from 'react';
 import CustomAppBar from './appbar';
 

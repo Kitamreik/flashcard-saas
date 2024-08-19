@@ -1,7 +1,7 @@
 //Pratik Code
 // Code for the Features section of the landing page
 import { Box, Card, CardContent, CardMedia, Grid, Typography } from "@mui/material";
-
+import {Divider} from "@mui/joy";
 export default function Features() {
     return (
         <Box sx={{ padding: 3, textAlign: 'center' }}>
