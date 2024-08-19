@@ -2,7 +2,7 @@
 
 //Pratik Code
 'use client';
-
+import { useRouter } from 'next/navigation';
 import { useUser } from '@clerk/nextjs';
 import { useEffect, useState } from 'react';
 import { collection, doc, getDocs } from 'firebase/firestore';
@@ -10,6 +10,7 @@ import { db } from '@/firebase';
 import { Container, Grid, Box, Typography, Card, CardActionArea, CardContent } from '@mui/material';
 import { useSearchParams } from 'next/navigation';
 import CustomAppBar from "@/app/appbar";
+import ArrowBack from '@mui/icons-material/ArrowBack';
 
 //This component uses Clerk’s `useUser` hook for authentication, React’s `useState` for managing the flashcards state, and Next.js’s `useRouter` for navigation.
 export default function Flashcard() {
@@ -34,9 +35,11 @@ export default function Flashcard() {
           flashcards.push({ id: doc.id, ...doc.data() })
         })
         setFlashcards(flashcards)
+        //added
+        localStorage.setItem('flashcards', JSON.stringify(flashcards));
       }
       getFlashcard()
-    }, [search, user]) //user, search  - Pratik
+    }, [user, search]) //user, search  - Pratik
 
     //This function retrieves all flashcards in the specified set from Firestore and updates the `flashcards` state.
 
@@ -47,7 +50,7 @@ export default function Flashcard() {
         ...prev,
         [id]: !prev[id],
       }))
-      router.push(`/flashcard?id=${id}`) //?
+      //router.push(`/flashcard?id=${id}`) //?
     }
   
     //The component uses a `useEffect` hook to fetch the user’s flashcard sets when the component mounts or when the user changes. This function retrieves the user’s document from Firestore and sets the `flashcards` state with the user’s flashcard collections. If the user document doesn’t exist, it creates one with an empty flashcards array. - basic
@@ -96,36 +99,85 @@ export default function Flashcard() {
     
       //advanced- Each flashcard is displayed as a card that flips when clicked, revealing the back of the card. The flip animation is achieved using CSS transforms and transitions. This individual flashcard set view provides an interactive way for users to study their flashcards. Users can flip cards to reveal answers and test their knowledge.
       return (
-        <Container maxWidth="md">
-          <Grid container spacing={3} sx={{ mt: 4 }}>
-            {flashcards.map((flashcard) => (
-              <Grid item xs={12} sm={6} md={4} key={flashcard.id}>
-                <Card>
-                  <CardActionArea onClick={() => handleCardClick(flashcard.id)}>
-                    <CardContent>
-                      <Box sx={{ /* Styling for flip animation */ }}>
-                        <div>
-                          <div>
-                            <Typography variant="h5" component="div">
-                              {flashcard.front}
-                            </Typography>
-                          </div>
-                          <div>
-                            <Typography variant="h5" component="div">
-                              {flashcard.back}
-                            </Typography>
-                          </div>
-                        </div>
-                      </Box>
-                    </CardContent>
-                  </CardActionArea>
-                </Card>
-              </Grid>
-            ))}
-          </Grid>
-        </Container>
+        <>
+          <Box sx={{ display: 'flex', justifyContent: 'center', gap: 2 }}>
+              <Button
+                  variant="contained"
+                  sx={{ fontFamily: 'Kalam, cursive', mt: 5, mb: 2, color: 'primary'}}
+                  onClick={() => router.back()}
+              >
+                  <ArrowBack />
+              </Button>
+              <Button
+                  variant="contained"
+                  color="primary"
+                  sx={{ fontFamily: 'Kalam, cursive', mt: 5, mb: 2 }}
+                  onClick={() => router.push('/practice')}
+              >
+                  Practice Flashcards
+              </Button>
+              
+          </Box>
+        <Container maxWidth="100vw">
+            <Grid container spacing={3} sx={{ mt: 4 }}>
+                {flashcards.map((flashcard, index) => (
+                    <Grid item xs={12} sm={6} md={4} key={index}>
+                        <Card>
+                            <CardActionArea onClick={() => handleCardClick(index)}>
+                                <CardContent sx={{backgroundColor: "#fff740"}}>
+                                    <Box
+                                        sx={{
+                                            perspective: "1000px",
+                                            "& > div": {
+                                                transition: "transform 0.6s",
+                                                transformStyle: "preserve-3d",
+                                                position: "relative",
+                                                width: "100%",
+                                                height: "200px",
+                                                transform: flipped[index] ? "rotateY(180deg)" : "rotateY(0deg)",
+                                            },
+                                            "& > div > div": {
+                                                position: "absolute",
+                                                width: "100%",
+                                                height: "200px",
+                                                backfaceVisibility: "hidden",
+                                                display: "flex",
+                                                justifyContent: "center",
+                                                alignItems: "center",
+                                                padding: 2,
+                                                boxSizing: "border-box",
+                                            },
+                                            "& > div > div:nth-of-type(1)": {
+                                                visibility: flipped[index] ? "hidden" : "visible",
+                                            },
+                                            "& > div > div:nth-of-type(2)": {
+                                                transform: "rotateY(180deg)",
+                                                visibility: flipped[index] ? "visible" : "hidden",
+                                            },
+                                        }}
+                                    >
+                                        <div>
+                                            <div>
+                                                <Typography variant="h5" component="div" sx={{ fontFamily: 'Kalam, cursive', fontSize: "1.0rem" }}>
+                                                    {flashcard.front}
+                                                </Typography>
+                                            </div>
+                                            <div>
+                                                <Typography variant="h5" component="div" sx={{ fontFamily: 'Kalam, cursive', fontSize: "1.0rem" }}>
+                                                    {flashcard.back}
+                                                </Typography>
+                                            </div>
+                                        </div>
+                                    </Box>
+                                </CardContent>
+                            </CardActionArea>
+                        </Card>
+                    </Grid>
+                ))}
+            </Grid>
+      </Container>
+    </>
       )
-
       //Pratik's code
       {/*
         return (
@@ -192,4 +244,37 @@ export default function Flashcard() {
         </>
     );
         */} 
+           //Code Along Code
+      {/*
+        <Container maxWidth="md">
+          <Grid container spacing={3} sx={{ mt: 4 }}>
+            {flashcards.map((flashcard) => (
+              <Grid item xs={12} sm={6} md={4} key={flashcard.id}>
+                <Card>
+                  <CardActionArea onClick={() => handleCardClick(flashcard.id)}>
+                    <CardContent>
+                    // Styling for flip animation 
+                      <Box sx={{  }}>
+                      <div>
+                      <div>
+                        <Typography variant="h5" component="div">
+                          {flashcard.front}
+                        </Typography>
+                      </div>
+                      <div>
+                        <Typography variant="h5" component="div">
+                          {flashcard.back}
+                        </Typography>
+                      </div>
+                    </div>
+                  </Box>
+                </CardContent>
+              </CardActionArea>
+            </Card>
+          </Grid>
+        ))}
+      </Grid>
+    </Container>
+
+      */}
   }

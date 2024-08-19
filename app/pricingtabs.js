@@ -5,7 +5,8 @@ import TabList from '@mui/joy/TabList';
 import Tab, { tabClasses } from '@mui/joy/Tab';
 import TabPanel from '@mui/joy/TabPanel';
 import Typography from '@mui/joy/Typography';
-import { Box } from '@mui/material';
+import {Box, Button} from '@mui/material';
+import { handleSubmit } from './page.js';
 
 export default function PricingTabs() {
     return (
@@ -13,20 +14,30 @@ export default function PricingTabs() {
             sx={{
                 display: 'flex',
                 justifyContent: 'center',
+                flexDirection: 'column',
                 alignItems: 'center',
                 textAlign: 'center',
+                paddingBottom: 5,
             }}
         >
+            <Typography variant="h4" component="h2" gutterBottom sx={{ marginBottom: 6, fontSize: '2rem'}}>Pricing</Typography>
             <Tabs
                 variant="outlined"
                 aria-label="Pricing plan"
                 defaultValue={0}
                 sx={{
-                    width: 750,
+                    width: {
+                        xs: 300, // mobile
+                        sm: 500, // tablet
+                        md: 750, // larger screens
+                    },
                     borderRadius: 'lg',
                     boxShadow: 'sm',
                     overflow: 'auto',
-                    height: 500,
+                    height: {
+                        xs: 250, // mobile
+                        md: 220, // larger screens
+                    },
                 }}
             >
                 <TabList
@@ -77,6 +88,9 @@ export default function PricingTabs() {
                             / user / month
                         </Typography>
                     </Typography>
+                    <Button variant="contained" color="primary" sx={{ mt: 2 }} onClick={() => handleSubmit('basic')}>
+                        Subscribe
+                    </Button>
                 </TabPanel>
                 <TabPanel value={2}>
                     <Typography level="inherit">
@@ -102,6 +116,9 @@ export default function PricingTabs() {
                             / user / month
                         </Typography>
                     </Typography>
+                    <Button variant="contained" color="primary" sx={{ mt: 2 }} onClick={() => handleSubmit('pro')}>
+                        Subscribe
+                    </Button>
                 </TabPanel>
             </Tabs>
         </Box>

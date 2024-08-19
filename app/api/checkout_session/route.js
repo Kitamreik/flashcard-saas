@@ -11,8 +11,69 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
   apiVersion: '2022-11-15',
 })
 
+//Implement the GET route to retrieve the session details after payment 
+/*
+This GET route does the following:
+
+1. It extracts the `session_id` from the query parameters of the request.
+2. If no `session_id` is provided, it throws an error.
+3. It uses the Stripe API to retrieve the checkout session details.
+4. It returns the session details as a JSON response.
+5. If an error occurs, it returns a 500 status code with the error message.
+*/
+
+export async function GET(req) {
+  const searchParams = req.nextUrl.searchParams
+  const session_id = searchParams.get('session_id')
+
+  try {
+    if (!session_id) {
+      throw new Error('Session ID is required')
+    }
+
+    const checkoutSession = await stripe.checkout.sessions.retrieve(session_id)
+
+    return NextResponse.json(checkoutSession)
+  } catch (error) {
+    console.error('Error retrieving checkout session:', error)
+    return NextResponse.json({ error: { message: error.message } }, { status: 500 })
+  }
+}
+
 export async function POST(req) {
   try {
+    //Pratik Code:
+    const { subscriptionType } = await req.json();
+
+    let priceData;
+    if (subscriptionType === 'basic') {
+        priceData = {
+            currency: 'usd',
+            product_data: {
+                name: 'Basic subscription',
+            },
+            unit_amount: formatAmountForStripe(1, 'usd'), // $1.00 in cents
+            recurring: {
+                interval: 'month',
+                interval_count: 1,
+            },
+        };
+    } else if (subscriptionType === 'pro') {
+        priceData = {
+            currency: 'usd',
+            product_data: {
+                name: 'Pro subscription',
+            },
+            unit_amount: formatAmountForStripe(2, 'usd'), // $2.00 in cents
+            recurring: {
+                interval: 'month',
+                interval_count: 1,
+            },
+        };
+    } else {
+        throw new Error('Invalid subscription type');
+    }
+
     // We'll implement the checkout session creation here
     /*
     This code does the following:
@@ -31,6 +92,13 @@ export async function POST(req) {
         mode: 'subscription',
         payment_method_types: ['card'],
         line_items: [
+          //simplified version, Pratik
+          {
+            price_data: priceData,
+            quantity: 1,
+          },
+          //code along
+          /*
           {
             price_data: {
               currency: 'usd',
@@ -46,6 +114,8 @@ export async function POST(req) {
             },
             quantity: 1,
           },
+          */
+          
         ],
         success_url: `${req.headers.get(
           'Referer',
@@ -68,33 +138,6 @@ export async function POST(req) {
   }
 }
 
-//Implement the GET route to retrieve the session details after payment 
-/*
-This GET route does the following:
 
-1. It extracts the `session_id` from the query parameters of the request.
-2. If no `session_id` is provided, it throws an error.
-3. It uses the Stripe API to retrieve the checkout session details.
-4. It returns the session details as a JSON response.
-5. If an error occurs, it returns a 500 status code with the error message.
-*/
-
-export async function GET(req) {
-    const searchParams = req.nextUrl.searchParams
-    const session_id = searchParams.get('session_id')
-  
-    try {
-      if (!session_id) {
-        throw new Error('Session ID is required')
-      }
-  
-      const checkoutSession = await stripe.checkout.sessions.retrieve(session_id)
-  
-      return NextResponse.json(checkoutSession)
-    } catch (error) {
-      console.error('Error retrieving checkout session:', error)
-      return NextResponse.json({ error: { message: error.message } }, { status: 500 })
-    }
-  }
 
 //Code Along: https://medium.com/@billzhangsc/creating-a-flashcard-saas-with-openai-and-stripe-7896ddea1dbb

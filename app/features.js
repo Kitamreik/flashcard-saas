@@ -11,7 +11,7 @@ export default function Features() {
                     <Card sx={{ maxWidth: '100%' }}>
                         <CardMedia
                             sx={{ height: 140 }}
-                            image="https://img.freepik.com/free-vector/realistic-ui-ux-background_52683-69487.jpg?size=626&ext=jpg"
+                            image="https://i.ibb.co/rQKqCSw/image.png"
                             title="Easy to Use"
                         />
                         <CardContent sx={{ textAlign: 'left' }}>
@@ -28,7 +28,7 @@ export default function Features() {
                     <Card sx={{ maxWidth: '100%' }}>
                         <CardMedia
                             sx={{ height: 140 }}
-                            image="https://img.freepik.com/free-vector/realistic-ui-ux-background_52683-69487.jpg?size=626&ext=jpg"
+                            image="https://i.ibb.co/7vNtJP5/image.png"
                             title="Customizable"
                         />
                         <CardContent sx={{ textAlign: 'left' }}>
@@ -45,7 +45,7 @@ export default function Features() {
                     <Card sx={{ maxWidth: '100%' }}>
                         <CardMedia
                             sx={{ height: 140 }}
-                            image="https://img.freepik.com/free-vector/realistic-ui-ux-background_52683-69487.jpg?size=626&ext=jpg"
+                            image="https://i.ibb.co/NWdqK7g/image.png"
                             title="Share and Collaborate"
                         />
                         <CardContent sx={{ textAlign: 'left' }}>
@@ -59,6 +59,7 @@ export default function Features() {
                     </Card>
                 </Grid>
             </Grid>
+            <Divider sx={{width: '50%', margin: '4rem auto 0' }} />
         </Box>
     );
 }
