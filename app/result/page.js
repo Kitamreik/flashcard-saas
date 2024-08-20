@@ -3,7 +3,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useSearchParams } from "next/navigation"
 import { Box, CircularProgress, Container, Typography } from "@mui/material"
-import getStripe from "@/utils/get-stripe"
+import getStripe from "@/public/utils/get-stripe"
 //The Stripe result page (`app/result/page.js`) is responsible for handling the post-payment process and displaying the outcome to the user. This section sets up the component, initializing state variables for loading, session data, and potential errors. It also extracts the `session_id` from the URL parameters.
 const ResultPage = () => {
     const router = useRouter()

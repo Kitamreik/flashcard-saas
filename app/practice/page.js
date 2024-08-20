@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { collection, doc, getDocs } from 'firebase/firestore';
 import { db } from '@/firebase';
 import { Container, Box, Typography, Button } from '@mui/material';
-import CustomAppBar from '@/app/appbar';
+import CustomAppBar from '@/public/app/appbar';
 import {Divider} from "@mui/joy";
 export default function Practice() {
     const router = useRouter();

@@ -16,21 +16,22 @@ import {
   Button,
   CardActionArea,
   CardContent,
+  CircularProgress,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogContentText,
   DialogActions,
+  InputAdornment
 } from '@mui/material'
 
-
+import { db } from "@/firebase";
 import { collection, doc, getDoc, writeBatch, setDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-import { db } from "@/firebase";
-import { useRouter } from "next/navigation";
+
 import CustomAppBar from "@/app/appbar";
 import AccountCircle from '@mui/icons-material/AccountCircle';
-
+import {Divider} from "@mui/joy";
 //end
 
 export default function Generate() {
@@ -128,27 +129,34 @@ export default function Generate() {
     3. If the response is successful, it updates the `flashcards` state with the generated data.
     4. If an error occurs, it logs the error and shows an alert to the user.
   */
-  const handleSubmit = async () => {
+  const handleSubmit = async (content) => {
+    /*
     if (!text.trim()) {
       alert('Please enter some text to generate flashcards.')
       return
     }
+    */
+    
     setLoading(true); //added
-    //refactor out try/catch for then/catch
+    try {
       const response = await fetch('/api/generate', {
         method: 'POST',
         //advanced
         headers: {
           "Content-Type": "application/json"
         },
-        body: JSON.stringify({ content: text }),
+        //body: JSON.stringify({ content, contentType }),
+        body: JSON.stringify({ content: text }), //inter
         
         //body: text, //basic
       })
-      //advanced 
-      .then((res) => res.json())
-      .then((data) => setFlashcards(data))
-      .catch(console.error('Error generating flashcards:', error))
+      //intermediate - disable
+      //.then((res) => res.json())
+      //.then((data) => setFlashcards(data))
+      //.catch(console.error('Error generating flashcards:', error)) 
+
+      const data = await response.json()
+      setFlashcards(data.flashcards)
   
       if (!response.ok) {
         console.error("Response error:", {
@@ -160,12 +168,13 @@ export default function Generate() {
         //throw new Error('Failed to generate flashcards') //basic
       }
       //basic
-      const data = await response.json()
-      setFlashcards(data)
-
+      
+    } catch (error) {
       alert('An error occurred while generating flashcards. Please try again.')
-
+      console.error("Error:", error);
+    } finally {
       setLoading(false);
+    }
     }
   //handle clicks
   const handleCardClick = (id) => {
@@ -295,7 +304,7 @@ export default function Generate() {
                     </Box>
                 )
             )}
-            <Dialog open={open} onClose={handleClose}>
+            <Dialog open={dialogOpen} onClose={handleClose}>
                 <DialogTitle>Save Flashcards</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
@@ -307,8 +316,8 @@ export default function Generate() {
                         label="Collection Name"
                         type="text"
                         fullWidth
-                        value={name}
-                        onChange={(e) => setName(e.target.value)}
+                        value={setName}
+                        onChange={(e) => setSetName(e.target.value)}
                         variant="outlined"
                     ></TextField>
                 </DialogContent>

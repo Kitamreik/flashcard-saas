@@ -37,7 +37,7 @@ export default function Landing() {
                         <Button variant="contained" color="primary" sx={{ mt: 2, mr: 2 }} href="/generate">
                             Start Creating
                         </Button>
-                        <Button variant="outlined" color="primary" sx={{ mt: 2 }} href="https://github.com/PratikPaudel/flashcard-saas"> Learn More </Button>
+                        <Button variant="outlined" color="primary" sx={{ mt: 2 }} href="https://github.com/Kitamreik/flashcard-saas"> Learn More </Button>
                     </Box>
                 </Box>
             </div>

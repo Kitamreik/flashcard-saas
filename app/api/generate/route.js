@@ -47,9 +47,27 @@ Return in the following JSON format:
 
 
 export async function POST(req) {
-  const client = new Groq(process.env.Groq_API_KEY);
+  const client = new Groq(process.env.GROQ_API_KEY);
+  //Pratik code
+   // Extract content and contentType from the request body
+   let content, contentType;
+   try {
+       const body = await req.json();
+       content = body.content;
+       contentType = body.contentType;
 
-  // Extract content from the request body
+       if (typeof content !== 'string' || typeof contentType !== 'string') {
+           return NextResponse.json({ error: "Content and contentType must be strings" }, { status: 400 });
+       }
+   } catch (error) {
+       console.error("Error extracting content from request:", error);
+       return NextResponse.json({ error: "Failed to parse request body" }, { status: 400 });
+   }
+
+
+  //Code Along
+  /*
+   // Extract content from the request body
   const { content } = await req.json();
 
   // Check if content is a string
@@ -59,6 +77,8 @@ export async function POST(req) {
   if (typeof content !== 'string') {
       return NextResponse.json({ error: "Content must be a string" }, { status: 400 });
   }
+  */
+ 
 
   const completion = await client.chat.completions.create({
       model: "llama3-8b-8192",
