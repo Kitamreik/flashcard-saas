@@ -1,7 +1,7 @@
 //This sets up the basic structure of our generate page with a text input area and a submit button. The `useState` hooks manage the state for the input text and generated flashcards. 
-'use client'
+'use client';
 
-import React, { useState, useEffect } from 'react'
+
 
 //Pratik Code
 import { useUser } from "@clerk/nextjs";
@@ -28,7 +28,7 @@ import {
 import { db } from "@/firebase";
 import { collection, doc, getDoc, writeBatch, setDoc } from "firebase/firestore";
 import { useRouter } from "next/navigation";
-
+import React, { useState, useEffect } from 'react';
 import CustomAppBar from "@/app/appbar";
 import AccountCircle from '@mui/icons-material/AccountCircle';
 import {Divider} from "@mui/joy";
@@ -71,7 +71,7 @@ export default function Generate() {
     3. If the response is successful, it updates the `flashcards` state with the generated data.
     4. If an error occurs, it logs the error and shows an alert to the user.
   */
-    const handleSubmit = async (content) => {
+    const handleSubmit = async (content, contentType) => {
         /*
         if (!text.trim()) {
           alert('Please enter some text to generate flashcards.')
@@ -85,10 +85,11 @@ export default function Generate() {
             method: 'POST',
             //advanced
             headers: {
-              "Content-Type": "application/json"
+              "Content-Type": "application/json",
+              "Cache-Control": "no-cache" // Ensure no caching
             },
-            //body: JSON.stringify({ content, contentType }),
-            body: JSON.stringify({ content: text }), //inter
+            body: JSON.stringify({ content, contentType }),
+            //body: JSON.stringify({ content: text }), //inter
             
             //body: text, //basic
           })
@@ -97,9 +98,7 @@ export default function Generate() {
           //.then((data) => setFlashcards(data))
           //.catch(console.error('Error generating flashcards:', error)) 
     
-          const data = await response.json()
-          setFlashcards(data.flashcards)
-      
+               
           if (!response.ok) {
             console.error("Response error:", {
               status: response.status,
@@ -109,7 +108,9 @@ export default function Generate() {
           throw new Error(`HTTP error! Status: ${response.status}`);
             //throw new Error('Failed to generate flashcards') //basic
           }
-          //basic
+          const data = await response.json()
+          console.log("Flashcards data:", data); // Log the data for debugging
+          setFlashcards(data)
           
         } catch (error) {
           alert('An error occurred while generating flashcards. Please try again.')
@@ -133,19 +134,23 @@ export default function Generate() {
 
   //Now, let’s implement the function to save flashcards to Firebase
   const saveFlashcards = async () => {
-    if (!setName.trim()) {
+    if (!setName) {
       alert('Please enter a name for your flashcard set.')
-      return
+      return;
     }
-  //refactor out try catch
-      const userDocRef = doc(collection(db, 'users'), user.id)
-      const userDocSnap = await getDoc(userDocRef)
+
+    if (!user?.id) {
+        console.error("User ID is not available");
+        return;
+    }
   
       const batch = writeBatch(db)
-  
+      const userDocRef = doc(db, "users", user.id);
+        try {
+            const userDocSnap = await getDoc(userDocRef)
       if (userDocSnap.exists()) {
         const collections = userDocSnap.data().flashcards || [];
-        if (collections.find((f) => f.setName === setName)) {
+        if (collections.find(f => f.setName === setName)) {
             alert("Flashcard collection with the same name already exists.");
             return;
         } else {
@@ -158,7 +163,7 @@ export default function Generate() {
         //batch.update(userDocRef, { flashcardSets: updatedSets })
       } else {
         //code along
-        batch.set(userDocRef, { flashcardSets: [{ name: setName }] })
+        batch.set(userDocRef, { flashcards: [{ setName }] })
       }
 
       //Pratik Code
@@ -179,8 +184,8 @@ export default function Generate() {
   
       const setDocRef = collection(userDocRef, setName)
       //Pratik Code
-      flashcards.forEach((flashcard) => {
-        const cardDocRef = doc(setDocRef);
+      flashcards.forEach((flashcard, index) => {
+        const cardDocRef = doc(setDocRef, index.toString());
         batch.set(cardDocRef, flashcard);
     });
 
@@ -189,6 +194,10 @@ export default function Generate() {
       alert('Flashcards saved successfully!')
       //use the router to push the flashcards
       router.push("/flashcards");
+        } catch (error) {
+            console.error("Error saving flashcards:", error);
+        }
+      
   }
 
 
@@ -206,14 +215,25 @@ export default function Generate() {
         <Container maxWidth="md">
             <Box
                 sx={{
-                    mt: 4,
-                    mb: 6,
+                    display: 'flex',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                    mt: 5,
+                }}
+            >
+                <Typography variant="h4">Generate FlashCards</Typography>
+            </Box>
+                <Divider orientation="vertical" sx={{ height: 'auto', mx: 4 }} />
+               
+            <Box
+                sx={{
                     display: "flex",
                     flexDirection: "column",
                     alignItems: "center",
+                    //width: "50%", // Adjust width if needed
                 }}
             >
-                <Typography variant="h4" sx={{ mb: 4 }}>Generate FlashCards</Typography>
+                
                 <TextField
                     id="input-with-icon-textfield"
                     label="Type in to generate Flashcards"
@@ -232,7 +252,7 @@ export default function Generate() {
                     variant="contained"
                     color="primary"
                     sx={{ mt: 3 }}
-                    onClick={handleSubmit}
+                    onClick={() => handleSubmit(text, "text")}
                 >
                     Submit
                 </Button>
@@ -316,7 +336,7 @@ export default function Generate() {
                 <DialogTitle>Save Flashcards</DialogTitle>
                 <DialogContent>
                     <DialogContentText>
-                        Please enter a name for your flashcards collection
+                        Please enter a name for your flashcard collection!
                     </DialogContentText>
                     <TextField
                         autoFocus
@@ -326,7 +346,7 @@ export default function Generate() {
                         fullWidth
                         value={setName}
                         onChange={(e) => setSetName(e.target.value)}
-                        variant="outlined"
+                        variant="standard"
                     ></TextField>
                 </DialogContent>
                 <DialogActions>

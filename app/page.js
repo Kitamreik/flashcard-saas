@@ -2,7 +2,6 @@
 import PricingTabs from './pricingtabs';
 import Landing from './landing';
 import Features from "./features";
-import TextExtractor from "@/app/components/TextExtractor/TextExtractor";
 
 //Stripe
 import getStripe from "@/utils/get-stripe";
