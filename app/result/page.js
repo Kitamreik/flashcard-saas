@@ -12,6 +12,27 @@ const ResultPage = () => {
     const [loading, setLoading] = useState(true)
     const [session, setSession] = useState(null)
     const [error, setError] = useState(null)
+
+    //This `useEffect` hook fetches the checkout session data from our API when the component mounts or when the `session_id` changes. It updates the component’s state based on the API response.
+    useEffect(() => {
+      const fetchCheckoutSession = async () => {
+        if (!session_id) return
+        try {
+          const res = await fetch(`/api/checkout_sessions?session_id=${session_id}`)
+          const sessionData = await res.json()
+          if (res.ok) {
+            setSession(sessionData)
+          } else {
+            setError(sessionData.error)
+          }
+        } catch (err) {
+          setError('An error occurred while retrieving the session.')
+        } finally {
+          setLoading(false)
+        }
+      }
+      fetchCheckoutSession()
+    }, [session_id])
   
     // loading state- While the session data is being fetched, a loading indicator is displayed to the user.
     if (loading) {
@@ -35,27 +56,7 @@ const ResultPage = () => {
           </Container>
         )
       }
-
-    //This `useEffect` hook fetches the checkout session data from our API when the component mounts or when the `session_id` changes. It updates the component’s state based on the API response.
-    useEffect(() => {
-        const fetchCheckoutSession = async () => {
-          if (!session_id) return
-          try {
-            const res = await fetch(`/api/checkout_sessions?session_id=${session_id}`)
-            const sessionData = await res.json()
-            if (res.ok) {
-              setSession(sessionData)
-            } else {
-              setError(sessionData.error)
-            }
-          } catch (err) {
-            setError('An error occurred while retrieving the session.')
-          } finally {
-            setLoading(false)
-          }
-        }
-        fetchCheckoutSession()
-      }, [session_id])
+   
 
       //display the result- This section displays the final result to the user. If the payment was successful (`payment_status === ‘paid’`), a thank you message is shown along with the session ID. If the payment failed, an appropriate message is displayed.This result page provides clear feedback to users about the status of their payment, enhancing the user experience of our Flashcard SaaS application’s subscription process.
       return (

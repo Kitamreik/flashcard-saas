@@ -78,18 +78,25 @@ export async function POST(req) {
       return NextResponse.json({ error: "Content must be a string" }, { status: 400 });
   }
   */
- 
 
-  const completion = await client.chat.completions.create({
+  // Choose the appropriate system prompt based on content type
+  let selectedSystemPrompt;
+  if (selectedSystemPrompt) {
+      selectedSystemPrompt = systemPrompt;
+  }
+ 
+  let completion; 
+  try {
+    completion = await client.chat.completions.create({
       model: "llama3-8b-8192",
       messages: [
           {
               role: "system",
-              content: systemPrompt
+              content: selectedSystemPrompt 
           },
           {
               role: "user",
-              content: `Create flashcards for the topic: ${content}`
+              content: content
           }
       ],
       temperature: 1,
@@ -99,15 +106,35 @@ export async function POST(req) {
       stop: null
   });
 
-  console.log("Completion response:", completion.choices[0].message.content);
+    // Log the response from Groq SDK
+    console.log("Groq SDK response:", completion);
 
+  } catch (error) {
+    console.error("Error with Groq SDK request:", error);
+    return NextResponse.json({ error: "Failed to get completion from Groq SDK" }, { status: 500 });
+}
+
+  // Validate and parse the response
   let flashcards;
   try {
-      // Extract the JSON part from the response using a regular expression
-      const jsonResponse = completion.choices[0].message.content.match(/\{[^]*\}/)[0];
+    //init the content
+    const responseContent = completion.choices[0]?.message?.content;
 
-      // Parse the extracted JSON
-      flashcards = JSON.parse(jsonResponse);
+    //err handling no content
+    if (!responseContent) {
+      throw new Error("No message content found in the response.");
+    }
+
+      // Extract the JSON part from the response using a regular expression
+      const jsonResponse = responseContent.match(/\{[\s\S]*\}/);
+
+      //err handling if no response
+      if (!jsonResponse) {
+        throw new Error("No valid JSON found in the response.");
+      }
+
+    // Parse the extracted JSON
+    flashcards = JSON.parse(jsonResponse[0]);
   } catch (error) {
       console.error("JSON parsing error:", error);
       return NextResponse.json({ error: "Invalid JSON response from Groq" }, { status: 500 });

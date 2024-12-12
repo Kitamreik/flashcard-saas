@@ -8,7 +8,8 @@ const firebaseConfig = {
  storageBucket: process.env.FIREBASE_STORAGE,
  messagingSenderId: process.env.FIREBASE_MSG_SENDER,
  appId: process.env.FIREBASE_APP_ID
+// measurementId: process.env.FIREBASE_MEASUREMENT_ID
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-export default db;
+export {db};

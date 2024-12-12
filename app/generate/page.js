@@ -34,6 +34,12 @@ import AccountCircle from '@mui/icons-material/AccountCircle';
 import {Divider} from "@mui/joy";
 //end
 
+// Define flashcard structure
+const defaultFlashcard = {
+    front: "",
+    back: "",
+};
+
 export default function Generate() {
   const { isLoaded, isSignedIn, user } = useUser();
   const [text, setText] = useState('');
@@ -44,10 +50,6 @@ export default function Generate() {
   //First, let’s add a state for the flashcard set name and the dialog open state
   const [setName, setSetName] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
-
-  //Next, let’s add functions to handle opening and closing the dialog
-  const handleOpen = () => setDialogOpen(true);
-  const handleClose = () => setDialogOpen(false);
   
   //Loading and Auth
   const [loading, setLoading] = useState(false);
@@ -61,6 +63,73 @@ export default function Generate() {
         setIsAuthenticated(true);
     }
   }, [isLoaded, isSignedIn, router]);
+
+  //This function does the following:
+  /*
+  1. It checks if the input text is empty and shows an alert if it is.
+    2. It sends a POST request to our `/api/generate` endpoint with the input text.
+    3. If the response is successful, it updates the `flashcards` state with the generated data.
+    4. If an error occurs, it logs the error and shows an alert to the user.
+  */
+    const handleSubmit = async (content) => {
+        /*
+        if (!text.trim()) {
+          alert('Please enter some text to generate flashcards.')
+          return
+        }
+        */
+        
+        setLoading(true); //added
+        try {
+          const response = await fetch('/api/generate', {
+            method: 'POST',
+            //advanced
+            headers: {
+              "Content-Type": "application/json"
+            },
+            //body: JSON.stringify({ content, contentType }),
+            body: JSON.stringify({ content: text }), //inter
+            
+            //body: text, //basic
+          })
+          //intermediate - disable
+          //.then((res) => res.json())
+          //.then((data) => setFlashcards(data))
+          //.catch(console.error('Error generating flashcards:', error)) 
+    
+          const data = await response.json()
+          setFlashcards(data.flashcards)
+      
+          if (!response.ok) {
+            console.error("Response error:", {
+              status: response.status,
+              statusText: response.statusText,
+              body: await response.text()
+          });
+          throw new Error(`HTTP error! Status: ${response.status}`);
+            //throw new Error('Failed to generate flashcards') //basic
+          }
+          //basic
+          
+        } catch (error) {
+          alert('An error occurred while generating flashcards. Please try again.')
+          console.error("Error:", error);
+        } finally {
+          setLoading(false);
+        }
+    }
+
+    //handle clicks
+  const handleCardClick = (id) => {
+    setFlipped((prev) => ({
+        ...prev,
+        [id]: !prev[id],
+    }));
+  };
+
+  //Next, let’s add functions to handle opening and closing the dialog
+  const handleOpen = () => setDialogOpen(true);
+  const handleClose = () => setDialogOpen(false);
 
   //Now, let’s implement the function to save flashcards to Firebase
   const saveFlashcards = async () => {
@@ -122,67 +191,6 @@ export default function Generate() {
       router.push("/flashcards");
   }
 
-  //This function does the following:
-  /*
-  1. It checks if the input text is empty and shows an alert if it is.
-    2. It sends a POST request to our `/api/generate` endpoint with the input text.
-    3. If the response is successful, it updates the `flashcards` state with the generated data.
-    4. If an error occurs, it logs the error and shows an alert to the user.
-  */
-  const handleSubmit = async (content) => {
-    /*
-    if (!text.trim()) {
-      alert('Please enter some text to generate flashcards.')
-      return
-    }
-    */
-    
-    setLoading(true); //added
-    try {
-      const response = await fetch('/api/generate', {
-        method: 'POST',
-        //advanced
-        headers: {
-          "Content-Type": "application/json"
-        },
-        //body: JSON.stringify({ content, contentType }),
-        body: JSON.stringify({ content: text }), //inter
-        
-        //body: text, //basic
-      })
-      //intermediate - disable
-      //.then((res) => res.json())
-      //.then((data) => setFlashcards(data))
-      //.catch(console.error('Error generating flashcards:', error)) 
-
-      const data = await response.json()
-      setFlashcards(data.flashcards)
-  
-      if (!response.ok) {
-        console.error("Response error:", {
-          status: response.status,
-          statusText: response.statusText,
-          body: await response.text()
-      });
-      throw new Error(`HTTP error! Status: ${response.status}`);
-        //throw new Error('Failed to generate flashcards') //basic
-      }
-      //basic
-      
-    } catch (error) {
-      alert('An error occurred while generating flashcards. Please try again.')
-      console.error("Error:", error);
-    } finally {
-      setLoading(false);
-    }
-    }
-  //handle clicks
-  const handleCardClick = (id) => {
-    setFlipped((prev) => ({
-        ...prev,
-        [id]: !prev[id],
-    }));
-  };
 
   //Pratik code
   if (!isAuthenticated) {
