@@ -1,5 +1,4 @@
 //Pratik Code
-
 import PricingTabs from './pricingtabs';
 import Landing from './landing';
 import Features from "./features";
